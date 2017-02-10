@@ -1,6 +1,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <chrono>
+#include <cmath>
+
 float vertices[] = {
   0.0f,  0.5f,
   0.5f, -0.5f,
@@ -77,14 +80,19 @@ int main() {
   glEnableVertexAttribArray(posAttrib);
 
   GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
-
-  glUniform3f(uniColor, 1.0f, 0.0f, 0.0f);
+  
+  auto t_start = std::chrono::high_resolution_clock::now();
   
   while (!glfwWindowShouldClose(window)) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    
+    auto t_now = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+
+    glUniform3f(uniColor, (std::sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
