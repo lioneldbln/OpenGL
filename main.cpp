@@ -6,10 +6,15 @@
 
 // OpenGL expects you to send all of your vertices in a single array.
 // This is the vertex data.
-float vertices[] = {
+GLfloat vertices[] = {
   0.0f,  0.5f, 1.0f, 0.0f, 0.0f, // vertex 1: red.
   0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // vertex 2: green.
  -0.5f, -0.5f, 0.0f, 0.0f, 1.0f  // vertex 3: blue. 
+};
+
+// An element array is filled with unsigned integers referring to vertices bound to GL_ARRAY_BUFFER
+GLuint elements[] = {
+  0, 1, 2
 };
 
 // Shader sources.
@@ -62,6 +67,12 @@ int main() {
                                                                              // note that this function doesn't refer to the id of our VBO.
                                                                              // but instead to the active buffer.
 
+  // Create an element array
+  GLuint ebo;
+  glGenBuffers(1, &ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+
   // Create and compile the vertex shader.
   GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER); // creates a shader object.
   glShaderSource(vertexShader, 1, &vertexSource, NULL); // loads data into it.
@@ -91,22 +102,14 @@ int main() {
   // Retrieve the location (or reference) to the uniform.
   GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
   
-  auto t_start = std::chrono::high_resolution_clock::now();
-  
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
     // Clear the screen to black.
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Draw the triangle from the 3 vertices.
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    
-    auto t_now = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-
-    // Change the color of the triangle using a sine function.
-    glUniform3f(uniColor, (std::sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
+    // Draw a triangle using indices
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
     // These two functions are required.
     glfwSwapBuffers(window); // swaps the back buffer and front buffer after you've finished drawing.
