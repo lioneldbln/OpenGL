@@ -41,10 +41,13 @@ const GLchar* fragmentSource =
     "in vec3 Color;" // make sure that the output of the vertex shader and the input of the fragment shader have the same name.
     "in vec2 Texcoord;"
     "out vec4 outColor;" // the fragment shader has one mandatory output, the final color of a fragment.
-    "uniform sampler2D tex;"
+    "uniform sampler2D texKitten;"
     "void main()"
     "{"
-    "    outColor = texture(tex, Texcoord) * vec4(Color, 1.0);"
+    "    if (Texcoord.y < 0.5)"
+    "        outColor = texture(texKitten, Texcoord);"
+    "    else"
+    "        outColor = texture(texKitten, vec2(Texcoord.x, 1.0 - Texcoord.y));"
     "}";
  
 int main() {
@@ -128,6 +131,8 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
