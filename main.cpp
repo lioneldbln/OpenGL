@@ -6,20 +6,18 @@
 
 // OpenGL expects you to send all of your vertices in a single array.
 // This is the vertex data.
-// Note that the repetition of vertex data is a waste of memory.
 float vertices[] = {
   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // Top-left
    0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Top-right
    0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Bottom-right
-
-   0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Bottom-right
-  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, // Bottom-left
-  -0.5f,  0.5f, 1.0f, 0.0f, 0.0f  // Top-left
+  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f  // Bottom-left
 };
 
 // An element array is filled with unsigned integers referring to vertices bound to GL_ARRAY_BUFFER
+// Using an element buffer allows to reuse data
 GLuint elements[] = {
-  0, 1, 2
+  0, 1, 2,
+  2, 3, 0
 };
 
 // Shader sources.
@@ -113,10 +111,8 @@ int main() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    // Draw a triangle using indices
-    // glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+    // Draw a rectangle from the 2 triangles using 6 indices
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     // These two functions are required.
     glfwSwapBuffers(window); // swaps the back buffer and front buffer after you've finished drawing.
