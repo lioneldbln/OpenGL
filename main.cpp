@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <SOIL/SOIL.h>
 
 #include <chrono>
 #include <cmath>
@@ -7,10 +8,11 @@
 // OpenGL expects you to send all of your vertices in a single array.
 // This is the vertex data.
 float vertices[] = {
-  -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // Top-left
-   0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Top-right
-   0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Bottom-right
-  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f  // Bottom-left
+// Position     Color             Texcoord
+  -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+   0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+   0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+  -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
 };
 
 // An element array is filled with unsigned integers referring to vertices bound to GL_ARRAY_BUFFER
@@ -25,19 +27,24 @@ const GLchar* vertexSource =
     "#version 150\n"
     "in vec2 position;"
     "in vec3 color;"
+    "in vec2 texcoord;"
     "out vec3 Color;"
+    "out vec2 Texcoord;"
     "void main()"
     "{"
     "    Color = color;"
+    "    Texcoord = texcoord;"
     "    gl_Position = vec4(position, 0.0, 1.0);" // remember that our vertex position is already specified as device coordinates.
     "}";
 const GLchar* fragmentSource =
     "#version 150\n"
     "in vec3 Color;" // make sure that the output of the vertex shader and the input of the fragment shader have the same name.
+    "in vec2 Texcoord;"
     "out vec4 outColor;" // the fragment shader has one mandatory output, the final color of a fragment.
+    "uniform sampler2D tex;"
     "void main()"
     "{"
-    "    outColor = vec4(Color, 1.0);"
+    "    outColor = texture(tex, Texcoord) * vec4(Color, 1.0);"
     "}";
  
 int main() {
@@ -96,15 +103,32 @@ int main() {
   
   // Specify the layout of the vertex data.
   GLint posAttrib = glGetAttribLocation(shaderProgram, "position"); // retrieves a reference to the position input in the vertex shader.
-  glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0); // specifies how the data for that input is retrieved from the array.
+  glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), 0); // specifies how the data for that input is retrieved from the array.
   glEnableVertexAttribArray(posAttrib); // the vertex attribute array needs to be enabled.
+
   GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-  glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+  glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
   glEnableVertexAttribArray(colAttrib);
 
-  // Retrieve the location (or reference) to the uniform.
-  GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
-  
+  GLint texAttrib =glGetAttribLocation(shaderProgram, "texcoord");
+  glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
+  glEnableVertexAttribArray(texAttrib);
+
+  // Load texture
+  GLuint tex;
+  glGenTextures(1, &tex);
+  glBindTexture(GL_TEXTURE_2D, tex); // since image are 2D arrays of pixels, it will be bound to the GL_TEXTURE_2D
+
+  int width, height;
+  unsigned char *image = SOIL_load_image("sample.png", &width, &height, 0, SOIL_LOAD_RGB);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+  SOIL_free_image_data(image);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
     // Clear the screen to black.
@@ -120,6 +144,7 @@ int main() {
   }
 
   // Clean up.
+  glDeleteTextures(1, &tex);
   glDeleteProgram(shaderProgram);
   glDeleteShader(fragmentShader);
   glDeleteShader(vertexShader);

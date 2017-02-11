@@ -12,6 +12,7 @@ set(ALL_LIBS
   glut
   GLEW
   glfw
+  SOIL
 )
 
 include_directories(inc)
