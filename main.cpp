@@ -107,6 +107,13 @@ int main() {
     glfwPollEvents(); // retrieve window events.
   }
 
+  // Clean up.
+  glDeleteProgram(shaderProgram);
+  glDeleteShader(fragmentShader);
+  glDeleteShader(vertexShader);
+  glDeleteBuffers(1, &vbo);
+  glDeleteBuffers(1, &vao);
+
   // Clean up when program closes.
   glfwTerminate();
 }
