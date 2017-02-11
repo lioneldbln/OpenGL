@@ -7,26 +7,29 @@
 // OpenGL expects you to send all of your vertices in a single array.
 // This is the vertex data.
 float vertices[] = {
-  0.0f,  0.5f,
-  0.5f, -0.5f,
- -0.5f, -0.5
+  0.0f,  0.5f, 1.0f, 0.0f, 0.0f, // vertex 1: red.
+  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // vertex 2: green.
+ -0.5f, -0.5f, 0.0f, 0.0f, 1.0f  // vertex 3: blue. 
 };
 
 // Shader sources.
 const GLchar* vertexSource =
     "#version 150\n"
     "in vec2 position;"
+    "in vec3 color;"
+    "out vec3 Color;"
     "void main()"
     "{"
+    "    Color = color;"
     "    gl_Position = vec4(position, 0.0, 1.0);" // remember that our vertex position is already specified as device coordinates.
     "}";
 const GLchar* fragmentSource =
     "#version 150\n"
-    "uniform vec3 triangleColor;" // uniforms are another to pass data to the shaders.
+    "in vec3 Color;" // make sure that the output of the vertex shader and the input of the fragment shader have the same name.
     "out vec4 outColor;" // the fragment shader has one mandatory output, the final color of a fragment.
     "void main()"
     "{"
-    "    outColor = vec4(triangleColor, 1.0);"
+    "    outColor = vec4(Color, 1.0);"
     "}";
  
 int main() {
@@ -79,8 +82,11 @@ int main() {
   
   // Specify the layout of the vertex data.
   GLint posAttrib = glGetAttribLocation(shaderProgram, "position"); // retrieves a reference to the position input in the vertex shader.
-  glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0); // specifies how the data for that input is retrieved from the array.
+  glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0); // specifies how the data for that input is retrieved from the array.
   glEnableVertexAttribArray(posAttrib); // the vertex attribute array needs to be enabled.
+  GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+  glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+  glEnableVertexAttribArray(colAttrib);
 
   // Retrieve the location (or reference) to the uniform.
   GLint uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
