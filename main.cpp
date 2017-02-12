@@ -138,17 +138,22 @@ int main() {
   GLint texKitten = glGetUniformLocation(shaderProgram, "texKitten");
   glUniform1i(texKitten, 0);
 
-  // A simple transformation
-  glm::mat4 trans;
-  trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
-  glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
+  auto t_start = std::chrono::high_resolution_clock::now();
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
     // Clear the screen to black.
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    auto t_now = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+
+    // A simple transformation
+    glm::mat4 trans;
+    trans = glm::rotate(trans, time * glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
+    glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
 
     // Draw a rectangle from the 2 triangles using 6 indices
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
