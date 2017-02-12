@@ -51,7 +51,16 @@ GLfloat vertices[] = {
      0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
      0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
     -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f
+    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+
+    //...
+
+    -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+     1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+     1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+     1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+    -1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
 };
 
 // An element array is filled with unsigned integers referring to vertices bound to GL_ARRAY_BUFFER.
@@ -180,7 +189,7 @@ int main() {
 
   auto t_start = std::chrono::high_resolution_clock::now();
 
-  float zViewPos = 1.2f;
+  float zViewPos = 2.2f;
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
@@ -191,7 +200,7 @@ int main() {
       zViewPos -= 0.1f;
       
     // Clear the screen to black.
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto t_now = std::chrono::high_resolution_clock::now();
@@ -203,7 +212,7 @@ int main() {
     GLint uniModel = glGetUniformLocation(shaderProgram, "model");
     glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
-    glm::mat4 view = glm::lookAt(glm::vec3(1.2f, 1.2f, zViewPos), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 view = glm::lookAt(glm::vec3(2.2f, 2.2f, zViewPos), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     GLint uniView = glGetUniformLocation(shaderProgram, "view");
     glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -213,6 +222,11 @@ int main() {
 
     // Draw a rectangle from the 2 triangles using 6 indices
     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDrawArrays(GL_TRIANGLES, 36, 6);
+
+    model = glm::scale(glm::translate(model, glm::vec3(0, 0, -1)), glm::vec3(1, 1, -1));
+    glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // These two functions are required.
