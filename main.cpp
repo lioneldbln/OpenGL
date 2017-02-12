@@ -33,12 +33,14 @@ const GLchar* vertexSource =
     "in vec2 texcoord;"
     "out vec3 Color;"
     "out vec2 Texcoord;"
-    "uniform mat4 trans;"
+    "uniform mat4 model;"
+    "uniform mat4 view;"
+    "uniform mat4 proj;"
     "void main()"
     "{"
     "    Color = color;"
     "    Texcoord = texcoord;"
-    "    gl_Position = trans * vec4(position, 0.0, 1.0);" // remember that our vertex position is already specified as device coordinates.
+    "    gl_Position = proj * view * model * vec4(position, 0.0, 1.0);" // remember that our vertex position is already specified as device coordinates.
     "}";
 const GLchar* fragmentSource =
     "#version 150\n"
@@ -138,6 +140,14 @@ int main() {
   GLint texKitten = glGetUniformLocation(shaderProgram, "texKitten");
   glUniform1i(texKitten, 0);
 
+  glm::mat4 view = glm::lookAt(glm::vec3(1.2f, 1.2f, 1.2f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  GLint uniView = glGetUniformLocation(shaderProgram, "view");
+  glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+
+  glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.f / 600.0f, 1.0f, 10.0f);
+  GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+  glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+
   auto t_start = std::chrono::high_resolution_clock::now();
 
   // The Event-Loop...
@@ -150,10 +160,10 @@ int main() {
     float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
 
     // A simple transformation
-    glm::mat4 trans;
-    trans = glm::rotate(trans, time * glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
-    glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
+    glm::mat4 model;
+    model = glm::rotate(model, time * glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    GLint uniModel = glGetUniformLocation(shaderProgram, "model");
+    glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
     // Draw a rectangle from the 2 triangles using 6 indices
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
