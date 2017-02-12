@@ -5,8 +5,8 @@
 #include <chrono>
 #include <cmath>
 
-// OpenGL expects you to send all of your vertices in a single array.
-// This is the vertex data.
+// OpenGL expects you to send all of your vertices in a single array, called vertex data.
+// This vertex array is a list of all vertices with their attributes packed together.
 float vertices[] = {
 // Position     Color             Texcoord
   -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
@@ -15,8 +15,8 @@ float vertices[] = {
   -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
 };
 
-// An element array is filled with unsigned integers referring to vertices bound to GL_ARRAY_BUFFER
-// Using an element buffer allows to reuse data
+// An element array is filled with unsigned integers referring to vertices bound to GL_ARRAY_BUFFER.
+// Element array is a way to control the order of the vertices which also enables you to reuse existing vertices.
 GLuint elements[] = {
   0, 1, 2,
   2, 3, 0
@@ -117,7 +117,7 @@ int main() {
   glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
   glEnableVertexAttribArray(texAttrib);
 
-  // Load texture
+  // Load texture.
   GLuint tex;
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex); // since image are 2D arrays of pixels, it will be bound to the GL_TEXTURE_2D
@@ -127,12 +127,15 @@ int main() {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
   SOIL_free_image_data(image);
 
+  // Set the texture parameters.
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glUniform1i(glGetUniformLocation(shaderProgram, "texKitten"), 0);
+  // Set the texKitten uniform.
+  GLint texKitten = glGetUniformLocation(shaderProgram, "texKitten");
+  glUniform1i(texKitten, 0);
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
