@@ -189,15 +189,15 @@ int main() {
 
   auto t_start = std::chrono::high_resolution_clock::now();
 
-  float zViewPos = 2.2f;
+  float scaleFactor = 1.0f;
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-      zViewPos += 0.1f;
+      scaleFactor += 0.01f;
     else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-      zViewPos -= 0.1f;
+      scaleFactor -= 0.01f;
       
     // Clear the screen to black.
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -209,10 +209,11 @@ int main() {
     // A simple transformation
     glm::mat4 model;
     model = glm::rotate(model, time * glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
     GLint uniModel = glGetUniformLocation(shaderProgram, "model");
     glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
-    glm::mat4 view = glm::lookAt(glm::vec3(2.2f, 2.2f, zViewPos), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 view = glm::lookAt(glm::vec3(2.2f, 2.2f, 2.2f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     GLint uniView = glGetUniformLocation(shaderProgram, "view");
     glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -223,11 +224,15 @@ int main() {
     // Draw a rectangle from the 2 triangles using 6 indices
     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glDepthMask(GL_FALSE);
     glDrawArrays(GL_TRIANGLES, 36, 6);
+    glDepthMask(GL_TRUE);
 
     model = glm::scale(glm::translate(model, glm::vec3(0, 0, -1)), glm::vec3(1, 1, -1));
-    glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));    
     glDrawArrays(GL_TRIANGLES, 0, 36);
+    
 
     // These two functions are required.
     glfwSwapBuffers(window); // swaps the back buffer and front buffer after you've finished drawing.
