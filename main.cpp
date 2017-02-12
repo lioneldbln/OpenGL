@@ -140,18 +140,18 @@ int main() {
   GLint texKitten = glGetUniformLocation(shaderProgram, "texKitten");
   glUniform1i(texKitten, 0);
 
-  glm::mat4 view = glm::lookAt(glm::vec3(1.2f, 1.2f, 1.2f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  GLint uniView = glGetUniformLocation(shaderProgram, "view");
-  glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
-
-  glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.f / 600.0f, 1.0f, 10.0f);
-  GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
-  glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
-
   auto t_start = std::chrono::high_resolution_clock::now();
+
+  float zViewPos = 1.2f;
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+      zViewPos += 0.1f;
+    else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+      zViewPos -= 0.1f;
+      
     // Clear the screen to black.
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -164,6 +164,14 @@ int main() {
     model = glm::rotate(model, time * glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     GLint uniModel = glGetUniformLocation(shaderProgram, "model");
     glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
+
+    glm::mat4 view = glm::lookAt(glm::vec3(1.2f, 1.2f, zViewPos), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    GLint uniView = glGetUniformLocation(shaderProgram, "view");
+    glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
+
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.f / 600.0f, 1.0f, 10.0f);
+    GLint uniProj = glGetUniformLocation(shaderProgram, "proj");
+    glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
     // Draw a rectangle from the 2 triangles using 6 indices
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
