@@ -1,6 +1,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <chrono>
 #include <cmath>
@@ -30,24 +33,22 @@ const GLchar* vertexSource =
     "in vec2 texcoord;"
     "out vec3 Color;"
     "out vec2 Texcoord;"
+    "uniform mat4 trans;"
     "void main()"
     "{"
     "    Color = color;"
     "    Texcoord = texcoord;"
-    "    gl_Position = vec4(position, 0.0, 1.0);" // remember that our vertex position is already specified as device coordinates.
+    "    gl_Position = trans * vec4(position, 0.0, 1.0);" // remember that our vertex position is already specified as device coordinates.
     "}";
 const GLchar* fragmentSource =
     "#version 150\n"
     "in vec3 Color;" // make sure that the output of the vertex shader and the input of the fragment shader have the same name.
     "in vec2 Texcoord;"
     "out vec4 outColor;" // the fragment shader has one mandatory output, the final color of a fragment.
-    "uniform sampler2D texKitten;"
+    "uniform sampler2D texKitten;" // this sampler is bound to texture unit 0.
     "void main()"
     "{"
-    "    if (Texcoord.y < 0.5)"
-    "        outColor = texture(texKitten, Texcoord);"
-    "    else"
-    "        outColor = texture(texKitten, vec2(Texcoord.x, 1.0 - Texcoord.y));"
+    "     outColor = texture(texKitten, Texcoord);"
     "}";
  
 int main() {
@@ -133,9 +134,15 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  // Set the texKitten uniform.
+  // Set the texKitten uniform to 0. 
   GLint texKitten = glGetUniformLocation(shaderProgram, "texKitten");
   glUniform1i(texKitten, 0);
+
+  // A simple transformation
+  glm::mat4 trans;
+  trans = glm::rotate(trans, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  GLint uniTrans = glGetUniformLocation(shaderProgram, "trans");
+  glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(trans));
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
