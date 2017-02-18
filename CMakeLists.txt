@@ -15,7 +15,7 @@ set(ALL_LIBS
   SOIL
 )
 
-include_directories(inc)
+include_directories(inc ./)
 
 file(GLOB SOURCES "./src/*.cpp")
 

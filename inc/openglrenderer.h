@@ -4,24 +4,20 @@
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
 
+// GLM Mathematics
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <chrono>
 #include <cmath>
 #include <iostream>
 
-// OpenGL expects you to send all of your vertices in a single array.
-// This is the vertex data.
-float vertices[] = {
-//  Position      Texcoords
-    -0.5f,  0.5f, 0.0f, 0.0f, // Top-left
-     0.5f,  0.5f, 1.0f, 0.0f, // Top-right
-     0.5f, -0.5f, 1.0f, 1.0f, // Bottom-right
-    -0.5f, -0.5f, 0.0f, 1.0f  // Bottom-left
-};
+#include "vertices.h"
+#include "shaders.h"
 
-GLuint elements[] = {
-    0, 1, 2,
-    2, 3, 0
-};
+// Window dimensions
+const GLuint WIDTH = 800, HEIGHT = 600;
 
 class OpenGLRenderer {
 private:
@@ -41,8 +37,9 @@ public:
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Draw a rectangle from the 2 triangles using 6 indices.
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    createTransformations();
+
+    glDrawArrays(GL_TRIANGLES, 0, 36);
   }
 
   GLuint buildVAO(void) {
@@ -102,11 +99,11 @@ public:
   void setupParameters() {
     // Specify the layout of the vertex data.
     GLint posAttrib = glGetAttribLocation(_shaderProgram, "position"); // retrieves a reference to the position input in the vertex shader.
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat) , 0); // specifies how the data for that input is retrieved from the array.
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat) , 0); // specifies how the data for that input is retrieved from the array.
     glEnableVertexAttribArray(posAttrib); // the vertex attribute array needs to be enabled.
 
     GLint texAttrib = glGetAttribLocation(_shaderProgram, "texcoord");
-    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(texAttrib);
   }
 
@@ -149,6 +146,26 @@ public:
       GLuint tex2Pos = glGetUniformLocation(_shaderProgram, "tex2");
       glUniform1i(tex2Pos, 1);
     }
+  }
+
+  void createTransformations() {
+    // Create transformations
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 projection;
+    model = glm::rotate(model, (GLfloat)glfwGetTime() * 1.0f, glm::vec3(0.5f, 1.0f, 0.0f));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+    // Get their uniform location
+    GLint modelLoc = glGetUniformLocation(_shaderProgram, "model");
+    GLint viewLoc = glGetUniformLocation(_shaderProgram, "view");
+    GLint projLoc = glGetUniformLocation(_shaderProgram, "projection"); 
+    // Pass them to the shaders
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    // Note: currently we set the projection matrix each frame
+    // but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));     
   }
 
   void deleteTexture(void) {
