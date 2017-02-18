@@ -4,13 +4,7 @@
 #include <chrono>
 #include <cmath>
 
-// OpenGL expects you to send all of your vertices in a single array.
-// This is the vertex data.
-float vertices[] = {
-  0.0f,  0.5f,
-  0.5f, -0.5f,
- -0.5f, -0.5
-};
+#include "openglrenderer.h"
 
 // Shader sources.
 const GLchar* vertexSource =
@@ -46,18 +40,9 @@ int main() {
   glewExperimental = GL_TRUE;
   glewInit();
 
-  // Create Vertex Array Object
-  GLuint vao;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
+  OpenGLRenderer render;
 
-  // Create a Vertex Buffer Object and copy the vertex data to it.
-  GLuint vbo;
-  glGenBuffers(1, &vbo); // generates 1 buffer.
-  glBindBuffer(GL_ARRAY_BUFFER, vbo); // makes it the active object.
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // uploads the actual data.
-                                                                             // note that this function doesn't refer to the id of our VBO.
-                                                                             // but instead to the active buffer.
+  render.buildVAO();
 
   // Create and compile the vertex shader.
   GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER); // creates a shader object.
@@ -111,8 +96,8 @@ int main() {
   glDeleteProgram(shaderProgram);
   glDeleteShader(fragmentShader);
   glDeleteShader(vertexShader);
-  glDeleteBuffers(1, &vbo);
-  glDeleteBuffers(1, &vao);
+
+  render.deleteBuffers();
 
   // Clean up when program closes.
   glfwTerminate();
