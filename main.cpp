@@ -190,6 +190,7 @@ int main() {
   auto t_start = std::chrono::high_resolution_clock::now();
 
   float scaleFactor = 1.0f;
+  float zTrans = 0;
 
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
@@ -198,6 +199,10 @@ int main() {
       scaleFactor += 0.01f;
     else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
       scaleFactor -= 0.01f;
+    else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+      zTrans -= 0.01f;
+    else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+      zTrans += 0.01f;
       
     // Clear the screen to black.
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -208,8 +213,9 @@ int main() {
 
     // A simple transformation
     glm::mat4 model;
-    model = glm::rotate(model, time * glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::translate(model, glm::vec3(0, 0, zTrans));
     model = glm::scale(model, glm::vec3(scaleFactor, scaleFactor, scaleFactor));
+    model = glm::rotate(model, time * glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     GLint uniModel = glGetUniformLocation(shaderProgram, "model");
     glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
 
