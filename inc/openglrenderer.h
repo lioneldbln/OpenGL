@@ -2,17 +2,20 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <SOIL/SOIL.h>
 
 #include <chrono>
 #include <cmath>
+#include <iostream>
 
 // OpenGL expects you to send all of your vertices in a single array.
 // This is the vertex data.
 float vertices[] = {
-    -0.5f,  0.5f, // Top-left
-     0.5f,  0.5f, // Top-right
-     0.5f, -0.5f, // Bottom-right
-    -0.5f, -0.5f  // Bottom-left
+//  Position      Texcoords
+    -0.5f,  0.5f, 0.0f, 0.0f, // Top-left
+     0.5f,  0.5f, 1.0f, 0.0f, // Top-right
+     0.5f, -0.5f, 1.0f, 1.0f, // Bottom-right
+    -0.5f, -0.5f, 0.0f, 1.0f  // Bottom-left
 };
 
 GLuint elements[] = {
@@ -29,21 +32,16 @@ private:
   GLuint _vertexShader;
   GLuint _fragmentShader;
   GLint _uniColor;
+  GLuint _tex;
 
 public:
-  void render(auto t_start) {
+  void render() {
     // Clear the screen to black.
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Draw a rectangle from the 2 triangles using 6 indices.
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    
-    auto t_now = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-
-    // Change the color of the triangle using a sine function.
-    glUniform3f(_uniColor, (std::sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
   }
 
   GLuint buildVAO(void) {
@@ -64,15 +62,32 @@ public:
   }
 
   GLuint buildProgramWithVertexSources(const char *vertexSource, const char *fragmentSource) {
+    GLint logLength;
     // Create and compile the vertex shader.
     _vertexShader = glCreateShader(GL_VERTEX_SHADER); // creates a shader object.
     glShaderSource(_vertexShader, 1, &vertexSource, NULL); // loads data into it.
     glCompileShader(_vertexShader);
+    glGetShaderiv(_vertexShader, GL_INFO_LOG_LENGTH, &logLength);
+	  if (logLength > 0) 
+	  {
+		  GLchar *log = (GLchar*) malloc(logLength);
+		  glGetShaderInfoLog(_vertexShader, logLength, &logLength, log);
+		  std::cout << "Vtx Shader compile log: " << log << std::endl;
+		  free(log);
+    }
 
     // Create and compile the fragment shader.
     _fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(_fragmentShader, 1, &fragmentSource, NULL);
     glCompileShader(_fragmentShader);
+    glGetShaderiv(_fragmentShader, GL_INFO_LOG_LENGTH, &logLength);
+	  if (logLength > 0) 
+	  {
+		  GLchar *log = (GLchar*) malloc(logLength);
+		  glGetShaderInfoLog(_fragmentShader, logLength, &logLength, log);
+		  std::cout << "Frag Shader compile log: " << log << std::endl;
+		  free(log);
+    }
 
     // Link the vertex and fragment shader into a shader program.
     _shaderProgram = glCreateProgram();
@@ -86,19 +101,40 @@ public:
   void setupParameters() {
     // Specify the layout of the vertex data.
     GLint posAttrib = glGetAttribLocation(_shaderProgram, "position"); // retrieves a reference to the position input in the vertex shader.
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0); // specifies how the data for that input is retrieved from the array.
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat) , 0); // specifies how the data for that input is retrieved from the array.
     glEnableVertexAttribArray(posAttrib); // the vertex attribute array needs to be enabled.
 
-    // Retrieve the location (or reference) to the uniform.
-    _uniColor = glGetUniformLocation(_shaderProgram, "triangleColor");
+    GLint texAttrib = glGetAttribLocation(_shaderProgram, "texcoord");
+    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(texAttrib);
+  }
+
+  void loadTexture(void) {
+    glGenTextures(1, &_tex);
+    glBindTexture(GL_TEXTURE_2D, _tex);
+
+    int width, height;
+    unsigned char* image = SOIL_load_image("container.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    SOIL_free_image_data(image);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);    
+  }
+
+  void deleteTexture(void) {
+    glDeleteTextures(1, &_tex);
   }
 
   void deleteBuffers(void) {
+    glDeleteBuffers(1, &_ebo);
     glDeleteBuffers(1, &_vbo);
     glDeleteBuffers(1, &_vao);
   }
-  
-  void deleteProgram(void) {
+
+   void deleteProgram(void) {
     glDeleteProgram(_shaderProgram);
     glDeleteShader(_fragmentShader);
     glDeleteShader(_vertexShader);

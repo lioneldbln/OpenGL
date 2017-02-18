@@ -4,17 +4,21 @@
 const GLchar* vertexSource =
     "#version 150\n"
     "in vec2 position;"
+    "in vec2 texcoord;"
+    "out vec2 Texcoord;"
     "void main()"
     "{"
+    "    Texcoord = texcoord;"
     "    gl_Position = vec4(position, 0.0, 1.0);" // remember that our vertex position is already specified as device coordinates.
     "}";
 const GLchar* fragmentSource =
     "#version 150\n"
-    "uniform vec3 triangleColor;" // uniforms are another to pass data to the shaders.
+    "in vec2 Texcoord;"
     "out vec4 outColor;" // the fragment shader has one mandatory output, the final color of a fragment.
+    "uniform sampler2D tex;"
     "void main()"
     "{"
-    "    outColor = vec4(triangleColor, 1.0);"
+    "    outColor = texture(tex, Texcoord) * vec4(1.0, 1.0, 1.0, 1.0);"
     "}";
  
 int main() {
@@ -41,12 +45,12 @@ int main() {
   renderer.buildProgramWithVertexSources(vertexSource, fragmentSource);
   
   renderer.setupParameters();
-  
-  auto t_start = std::chrono::high_resolution_clock::now();
+
+  renderer.loadTexture();
   
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {
-    renderer.render(t_start);
+    renderer.render();
 
     // These two functions are required.
     glfwSwapBuffers(window); // swaps the back buffer and front buffer after you've finished drawing.
@@ -54,6 +58,7 @@ int main() {
   }
 
   // Clean up.
+  renderer.deleteTexture();
   renderer.deleteProgram();
   renderer.deleteBuffers();
 
