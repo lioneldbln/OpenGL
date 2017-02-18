@@ -3,6 +3,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <chrono>
+#include <cmath>
+
 // OpenGL expects you to send all of your vertices in a single array.
 // This is the vertex data.
 float vertices[] = {
@@ -13,14 +16,30 @@ float vertices[] = {
 
 class OpenGLRenderer {
 private:
-  GLuint _programName;
+  GLuint _shaderProgram;
   GLuint _vao;
   GLuint _vbo;
+  GLuint _vertexShader;
+  GLuint _fragmentShader;
   GLuint _viewWidth;
   GLuint _viewHeight;
+  GLint _uniColor;
 
 public:
-  void render(void);
+  void render(auto t_start) {
+    // Clear the screen to black.
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Draw the triangle from the 3 vertices.
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    
+    auto t_now = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+
+    // Change the color of the triangle using a sine function.
+    glUniform3f(_uniColor, (std::sin(time * 4.0f) + 1.0f) / 2.0f, 0.0f, 0.0f);
+  }
 
   GLuint buildVAO(void) {
     // Create Vertex Array Object
@@ -35,11 +54,45 @@ public:
                                                                                // but instead to the active buffer.
   }
 
-  GLuint buildProgramWithVertexSources(const char *vertexSource, const char *fragmentSource);
+  GLuint buildProgramWithVertexSources(const char *vertexSource, const char *fragmentSource) {
+    // Create and compile the vertex shader.
+    _vertexShader = glCreateShader(GL_VERTEX_SHADER); // creates a shader object.
+    glShaderSource(_vertexShader, 1, &vertexSource, NULL); // loads data into it.
+    glCompileShader(_vertexShader);
+
+    // Create and compile the fragment shader.
+    _fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(_fragmentShader, 1, &fragmentSource, NULL);
+    glCompileShader(_fragmentShader);
+
+    // Link the vertex and fragment shader into a shader program.
+    _shaderProgram = glCreateProgram();
+    glAttachShader(_shaderProgram, _vertexShader);
+    glAttachShader(_shaderProgram, _fragmentShader);
+    glBindFragDataLocation(_shaderProgram, 0, "outColor"); // need to explicitily specify which output is written to which buffer.
+    glLinkProgram(_shaderProgram);
+    glUseProgram(_shaderProgram);
+  }
+
+  void setupParameters() {
+    // Specify the layout of the vertex data.
+    GLint posAttrib = glGetAttribLocation(_shaderProgram, "position"); // retrieves a reference to the position input in the vertex shader.
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0); // specifies how the data for that input is retrieved from the array.
+    glEnableVertexAttribArray(posAttrib); // the vertex attribute array needs to be enabled.
+
+    // Retrieve the location (or reference) to the uniform.
+    _uniColor = glGetUniformLocation(_shaderProgram, "triangleColor");
+  }
 
   void deleteBuffers(void) {
     glDeleteBuffers(1, &_vbo);
     glDeleteBuffers(1, &_vao);
+  }
+  
+  void deleteProgram(void) {
+    glDeleteProgram(_shaderProgram);
+    glDeleteShader(_fragmentShader);
+    glDeleteShader(_vertexShader);
   }
 };
 
