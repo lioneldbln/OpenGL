@@ -15,10 +15,11 @@ const GLchar* fragmentSource =
     "#version 150\n"
     "in vec2 Texcoord;"
     "out vec4 outColor;" // the fragment shader has one mandatory output, the final color of a fragment.
-    "uniform sampler2D tex;"
+    "uniform sampler2D tex1;"
+    "uniform sampler2D tex2;"
     "void main()"
     "{"
-    "    outColor = texture(tex, Texcoord) * vec4(1.0, 1.0, 1.0, 1.0);"
+    "    outColor = mix(texture(tex1, Texcoord), texture(tex2, Texcoord), 0.2);"
     "}";
  
 int main() {
@@ -46,7 +47,7 @@ int main() {
   
   renderer.setupParameters();
 
-  renderer.loadTexture();
+  renderer.loadTextures();
   
   // The Event-Loop...
   while (!glfwWindowShouldClose(window)) {

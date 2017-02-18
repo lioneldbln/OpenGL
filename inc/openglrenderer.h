@@ -32,12 +32,13 @@ private:
   GLuint _vertexShader;
   GLuint _fragmentShader;
   GLint _uniColor;
-  GLuint _tex;
+  GLuint _tex1;
+  GLuint _tex2;
 
 public:
   void render() {
     // Clear the screen to black.
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Draw a rectangle from the 2 triangles using 6 indices.
@@ -109,23 +110,50 @@ public:
     glEnableVertexAttribArray(texAttrib);
   }
 
-  void loadTexture(void) {
-    glGenTextures(1, &_tex);
-    glBindTexture(GL_TEXTURE_2D, _tex);
+  void loadTextures(void) {
+    {
+      glActiveTexture(GL_TEXTURE0); // activate the texture unit first before binding texture.
+      glGenTextures(1, &_tex1);
+      glBindTexture(GL_TEXTURE_2D, _tex1);
 
-    int width, height;
-    unsigned char* image = SOIL_load_image("container.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    SOIL_free_image_data(image);
+      int width, height;
+      unsigned char* image = SOIL_load_image("container.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+      glGenerateMipmap(GL_TEXTURE_2D);
+      SOIL_free_image_data(image);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);    
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      GLuint tex1Pos = glGetUniformLocation(_shaderProgram, "tex1");
+      glUniform1i(tex1Pos, 0);
+    }
+    {
+      glActiveTexture(GL_TEXTURE1); // activate the texture unit first before binding texture.
+      glGenTextures(1, &_tex2);
+      glBindTexture(GL_TEXTURE_2D, _tex2);
+
+      int width, height;
+      unsigned char* image = SOIL_load_image("smile.png", &width, &height, 0, SOIL_LOAD_RGB);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+      glGenerateMipmap(GL_TEXTURE_2D);
+      SOIL_free_image_data(image);
+
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      GLuint tex2Pos = glGetUniformLocation(_shaderProgram, "tex2");
+      glUniform1i(tex2Pos, 1);
+    }
   }
 
   void deleteTexture(void) {
-    glDeleteTextures(1, &_tex);
+    glDeleteTextures(1, &_tex1);
+    glDeleteTextures(1, &_tex2);
   }
 
   void deleteBuffers(void) {
