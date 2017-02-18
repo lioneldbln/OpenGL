@@ -9,20 +9,25 @@
 // OpenGL expects you to send all of your vertices in a single array.
 // This is the vertex data.
 float vertices[] = {
-  0.0f,  0.5f,
-  0.5f, -0.5f,
- -0.5f, -0.5
+    -0.5f,  0.5f, // Top-left
+     0.5f,  0.5f, // Top-right
+     0.5f, -0.5f, // Bottom-right
+    -0.5f, -0.5f  // Bottom-left
+};
+
+GLuint elements[] = {
+    0, 1, 2,
+    2, 3, 0
 };
 
 class OpenGLRenderer {
 private:
-  GLuint _shaderProgram;
   GLuint _vao;
   GLuint _vbo;
+  GLuint _ebo;
+  GLuint _shaderProgram;
   GLuint _vertexShader;
   GLuint _fragmentShader;
-  GLuint _viewWidth;
-  GLuint _viewHeight;
   GLint _uniColor;
 
 public:
@@ -31,8 +36,8 @@ public:
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Draw the triangle from the 3 vertices.
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // Draw a rectangle from the 2 triangles using 6 indices.
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
     auto t_now = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
@@ -52,6 +57,10 @@ public:
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // uploads the actual data.
                                                                                // note that this function doesn't refer to the id of our VBO.
                                                                                // but instead to the active buffer.
+
+    glGenBuffers(1, &_ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
   }
 
   GLuint buildProgramWithVertexSources(const char *vertexSource, const char *fragmentSource) {
