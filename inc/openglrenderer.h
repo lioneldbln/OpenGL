@@ -147,10 +147,20 @@ public:
   }
 
   void createTransformations() {
+    // Camera/View transformation
     glm::mat4 view;
+    GLfloat radius = 10.0f;
+    GLfloat camX = sin(glfwGetTime()) * radius;
+    GLfloat camZ = cos(glfwGetTime()) * radius;
+    view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), // position in world space.
+                       glm::vec3(0.0f, 0.0f, 0.0f), // target.
+                       glm::vec3(0.0f, 1.0f, 0.0f)); // up vector.
+    // Projection
     glm::mat4 projection;
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+    projection = glm::perspective(45.0f, // defines the FOV value.
+                                  (GLfloat)WIDTH / (GLfloat)HEIGHT, // sets the aspect ratio.
+                                  0.1f, // near plane.
+                                  100.0f); // far plane.
     // Get their uniform location
     GLint modelLoc = glGetUniformLocation(_shaderProgram, "model");
     GLint viewLoc = glGetUniformLocation(_shaderProgram, "view");
